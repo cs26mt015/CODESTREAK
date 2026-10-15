@@ -1,0 +1,9 @@
+﻿fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+pymysql
+pydantic-settings
+pytest
+pytest-cov
+httpx
