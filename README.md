@@ -1,40 +1,59 @@
-﻿# CodeStreak
+# CodeStreak
 
-CodeStreak is an AI-enabled competitive programming practice platform.
+CodeStreak is a competitive programming practice platform.
 
-## Planned Technology Stack
+## Requirements
 
-- Frontend: React and Vite
-- Backend: Python and FastAPI
-- Database: MySQL 8
-- ORM and migrations: SQLAlchemy and Alembic
-- API documentation: OpenAPI and Swagger UI
-- Testing: pytest, pytest-cov, and Playwright
-- Containerization: Docker and Docker Compose
-- AI assistance: Google Gemini API (proposed)
+- Docker Desktop or Docker Engine with the Docker Compose plugin.
+- An internet connection for the initial image and dependency downloads.
 
-## Project Structure
+Python, Node.js, npm, and MySQL do not need to be installed on the host.
 
-- `frontend/` — React application
-- `backend/` — FastAPI application, business logic, and tests
-- `database/` — Database-related assets and seed data
-- `Dockerfile` — Application image build
-- `docker-compose.yml` — Local application and database services
-- `.env.example` — Example environment configuration
+## Start the application
 
-## Planned Features
+From the repository root, run:
 
-- Curated programming problem library
-- Topic and difficulty filters
-- Problem attempt and solved-status tracking
-- Daily streaks and practice goals
-- Progress analytics
-- AI-generated contextual hints and explanations
+```bash
+docker compose up
+```
 
-## Scope
+Compose builds the application image when necessary, starts MySQL,
+waits for the database health check, and starts the application.
 
-The initial release will focus on practice management and learning support. It will not execute arbitrary submitted code or implement a full-scale online judge.
+The React frontend is built into the application image and served by FastAPI.
+The database is accessible internally to the application as `db:3306`;
+it is not published on a host port.
 
-## Development Status
+Docker automatically allocates an available host port for the web application.
+To find the port, open the running app container in Docker Desktop and inspect
+its published ports. The host port forwards to container port 8000.
 
-Initial project setup is in progress.
+## Stop the application
+
+Press Ctrl+C in the terminal running Compose.
+
+## Database persistence
+
+MySQL data is stored in the named Docker volume `mysql_data`.
+Stopping or recreating containers does not normally delete this data.
+
+Do not use `docker compose down -v` unless you intentionally want to delete
+the database volume.
+
+## Configuration
+
+The project can start without a local `.env` file, using development defaults.
+Optional settings such as `GEMINI_API_KEY` can be supplied through environment
+configuration when needed.
+
+The built-in database credentials are for local development and demonstrations,
+not production deployment.
+
+## Technology stack
+
+- React and Vite
+- Python and FastAPI
+- MySQL 8
+- SQLAlchemy and Alembic
+- Docker Compose
+- Pytest

@@ -1,15 +1,12 @@
-﻿services:
+services:
   db:
     image: mysql:8.0
-    container_name: codestreak-db
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-codestreak}
       MYSQL_USER: ${MYSQL_USER:-codestreak_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
-    ports:
-      - "127.0.0.1:3306:3306"
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-codestreak_dev_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-codestreak_root_dev_password}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -23,18 +20,14 @@
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: codestreak-app
     restart: unless-stopped
     environment:
-      APP_ENV: development
+      APP_ENV: ${APP_ENV:-development}
       APP_PORT: 8000
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-codestreak}
-      MYSQL_USER: ${MYSQL_USER:-codestreak_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
-      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-codestreak_user}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE:-codestreak}
+      DATABASE_URL: "mysql+pymysql://${MYSQL_USER:-codestreak_user}:${MYSQL_PASSWORD:-codestreak_dev_password}@db:3306/${MYSQL_DATABASE:-codestreak}"
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1::8000"
     depends_on:
       db:
         condition: service_healthy
