@@ -1,49 +1,22 @@
-﻿import { useEffect, useState } from "react";
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
-export default function App() {
-  const [apiStatus, setApiStatus] = useState("Checking API...");
-
-  useEffect(() => {
-    fetch("/api/health")
-      .then((response) => {
-        if (!response.ok) throw new Error("API unavailable");
-        return response.json();
-      })
-      .then((data) => setApiStatus(data.status === "ok" ? "Connected" : "Unavailable"))
-      .catch(() => setApiStatus("Unavailable"));
-  }, []);
-
+function App() {
   return (
     <main className="page">
-      <nav className="navbar">
-        <a className="brand" href="/">CodeStreak<span>.</span></a>
-        <span className="nav-label">COMPETITIVE PROGRAMMING</span>
-      </nav>
-
-      <section className="hero">
-        <div className="eyebrow"><span className="dot" /> YOUR NEXT STREAK STARTS HERE</div>
-        <h1>Practice smarter.<br /><span>Stay consistent.</span></h1>
-        <p className="intro">
-          Build your problem-solving skills, track your progress,
-          and turn daily practice into a habit.
+      <section className="welcome-card" aria-labelledby="page-title">
+        <p className="eyebrow">ASDL · Application</p>
+        <h1 id="page-title">Frontend is ready</h1>
+        <p className="description">
+          The React application is set up and ready for the project interface.
         </p>
-
-        <div className="actions">
-          <a className="primary-button" href="/docs">Explore API <span>↗</span></a>
-          <a className="secondary-button" href="/api/health">Check backend</a>
-        </div>
-
-        <div className="status-card">
-          <div className="status-icon">✓</div>
-          <div>
-            <strong>Backend status</strong>
-            <p>FastAPI connection: {apiStatus}</p>
-          </div>
-          <span className="status-dot" />
+        <div className="connection">
+          <span className="connection-dot" aria-hidden="true" />
+          <span>API base URL</span>
+          <code>{apiBaseUrl}</code>
         </div>
       </section>
-
-      <footer>CODESTREAK · BUILD YOUR DAILY PRACTICE HABIT</footer>
     </main>
-  );
+  )
 }
+
+export default App

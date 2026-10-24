@@ -1,0 +1,35 @@
+openapi: 3.1.0
+info:
+  title: ASDL API
+  version: 0.1.0
+  description: ASDL project backend API.
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+paths:
+  /api/v1/health:
+    get:
+      operationId: health_check_api_v1_health_get
+      summary: Check API health
+      description: Return a simple liveness response. This does not check database connectivity.
+      tags:
+        - health
+      responses:
+        '200':
+          description: API process is responding
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          const: ok
