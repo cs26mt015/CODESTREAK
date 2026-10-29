@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
 from app.db.base import Base
+import app.models  # noqa: F401
 
 # Import model modules here as they are added so their tables are registered on Base.metadata.
 target_metadata = Base.metadata
