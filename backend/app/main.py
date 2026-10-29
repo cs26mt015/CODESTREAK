@@ -5,8 +5,11 @@ from app.core.config import settings
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
-    description="ASDL project backend API.",
+    version="0.2.0",
+    description=(
+        "CodeStreak REST API. Public problem responses exclude editorial content; "
+        "learner data is owner-scoped."
+    ),
     openapi_url="/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",
