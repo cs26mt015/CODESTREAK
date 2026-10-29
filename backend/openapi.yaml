@@ -1,35 +1,773 @@
 openapi: 3.1.0
 info:
-  title: ASDL API
-  version: 0.1.0
-  description: ASDL project backend API.
+  title: CodeStreak API
+  version: 0.2.0
+  description: >-
+    REST API for the CodeStreak competitive programming practice platform.
+    Public problem responses never expose editorial notes or reference solutions.
 servers:
-  - url: http://localhost:8000
-    description: Local development server
+  - url: http://localhost:8000/api/v1
+    description: Local development API
+tags:
+  - name: system
+  - name: authentication
+  - name: problems
+  - name: practice
+  - name: progress
+  - name: recommendations
+  - name: hints
+  - name: administration
 paths:
-  /api/v1/health:
+  /health:
     get:
-      operationId: health_check_api_v1_health_get
-      summary: Check API health
-      description: Return a simple liveness response. This does not check database connectivity.
-      tags:
-        - health
+      operationId: healthCheck
+      tags: [system]
+      summary: Check API liveness
       responses:
         '200':
-          description: API process is responding
+          description: API is responding
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
-              example:
-                status: ok
+                type: object
+                properties:
+                  status: { type: string, const: ok }
+                required: [status]
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [authentication]
+      summary: Register a learner account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          description: Account created and authenticated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [authentication]
+      summary: Sign in with an email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [authentication]
+      summary: Get the authenticated user's profile
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Current profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      operationId: updateCurrentUser
+      tags: [authentication]
+      summary: Update the authenticated user's profile
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserUpdate' }
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      operationId: deleteCurrentUser
+      tags: [authentication]
+      summary: Delete the authenticated user's account and private data
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Account and associated private data deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /problems:
+    get:
+      operationId: listProblems
+      tags: [problems]
+      summary: Search and filter published problems
+      description: The status filter requires a learner bearer token; all other filters are public.
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: difficulty, in: query, schema: { type: string } }
+        - { name: tag, in: query, schema: { type: string } }
+        - name: status
+          in: query
+          description: Requires a learner bearer token.
+          schema: { type: string, enum: [not_started, attempted, solved] }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Page of public problem summaries
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /problems/{problem_id}:
+    get:
+      operationId: getProblem
+      tags: [problems]
+      summary: Get a published problem without private editorial content
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      responses:
+        '200':
+          description: Public problem details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemPublic' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tags:
+    get:
+      operationId: listTags
+      tags: [problems]
+      summary: List problem topic tags
+      responses:
+        '200':
+          description: Tags available for browsing
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Tag' }
+  /attempts:
+    get:
+      operationId: listAttempts
+      tags: [practice]
+      summary: List the authenticated learner's attempts
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: problem_id, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Page of the learner's attempts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      operationId: recordAttempt
+      tags: [practice]
+      summary: Record a learner-reported practice attempt
+      description: The service does not execute or automatically judge submitted code.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AttemptCreate' }
+      responses:
+        '201':
+          description: Attempt recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Attempt' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /problems/{problem_id}/status:
+    get:
+      operationId: getProblemStatus
+      tags: [practice]
+      summary: Get the authenticated learner's status for a problem
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      responses:
+        '200':
+          description: Learner's problem status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemStatus' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateProblemStatus
+      tags: [practice]
+      summary: Create or update the authenticated learner's problem status
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProblemStatusUpdate' }
+      responses:
+        '200':
+          description: Updated learner status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemStatus' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /plans:
+    get:
+      operationId: listPracticePlans
+      tags: [progress]
+      summary: List the authenticated learner's practice plans
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: start_date, in: query, schema: { type: string, format: date } }
+        - { name: end_date, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Learner's practice plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PracticePlan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /plans/{plan_date}:
+    put:
+      operationId: upsertPracticePlan
+      tags: [progress]
+      summary: Create or update the learner's plan for a local date
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: plan_date, in: path, required: true, schema: { type: string, format: date } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PracticePlanUpdate' }
+      responses:
+        '200':
+          description: Saved plan
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PracticePlan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      operationId: deletePracticePlan
+      tags: [progress]
+      summary: Delete the learner's plan for a local date
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: plan_date, in: path, required: true, schema: { type: string, format: date } }
+      responses:
+        '204': { description: Plan deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /progress/activity:
+    get:
+      operationId: getActivity
+      tags: [progress]
+      summary: Get the learner's daily activity for a date range
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: start_date, in: query, required: true, schema: { type: string, format: date } }
+        - { name: end_date, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Daily activity rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DailyActivity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /progress/streaks:
+    get:
+      operationId: getStreaks
+      tags: [progress]
+      summary: Calculate current and longest activity streaks
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Streak summary in the learner's timezone
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StreakSummary' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /progress/summary:
+    get:
+      operationId: getProgressSummary
+      tags: [progress]
+      summary: Get practice totals, goal progress, and topic/difficulty summaries
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Learner progress summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProgressSummary' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /recommendations/next:
+    get:
+      operationId: getNextRecommendation
+      tags: [recommendations]
+      summary: Recommend an unsolved published problem
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Recommended problem or an explanation that none is available
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Recommendation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /problems/{problem_id}/hints:
+    post:
+      operationId: requestProblemHint
+      tags: [hints]
+      summary: Request a progressive, problem-contextual hint
+      description: Requires a configured AI provider. Learner source code is not accepted or sent.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HintRequest' }
+      responses:
+        '200':
+          description: Generated hint
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HintResponse' }
+        '429':
+          description: Hint request limit reached
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /admin/problems:
+    get:
+      operationId: listAdminProblems
+      tags: [administration]
+      summary: List all problems, including unpublished content
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Page of administrative problem records
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminProblemPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      operationId: createProblem
+      tags: [administration]
+      summary: Create a problem as an administrator
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProblemWrite' }
+      responses:
+        '201':
+          description: Created problem (unpublished by default)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemAdmin' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/problems/{problem_id}:
+    get:
+      operationId: getAdminProblem
+      tags: [administration]
+      summary: Get full problem content including private editorial fields
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      responses:
+        '200':
+          description: Full administrative problem record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemAdmin' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateProblem
+      tags: [administration]
+      summary: Update problem metadata or content
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProblemPatch' }
+      responses:
+        '200':
+          description: Updated problem record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemAdmin' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteProblem
+      tags: [administration]
+      summary: Delete a problem and its dependent content links
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      responses:
+        '204': { description: Problem deleted }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /admin/problems/{problem_id}/publication:
+    put:
+      operationId: setProblemPublication
+      tags: [administration]
+      summary: Publish or unpublish a problem
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_published]
+              properties:
+                is_published: { type: boolean }
+      responses:
+        '200':
+          description: Updated publication state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemAdmin' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ProblemId:
+      name: problem_id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Account does not have the required role
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Request conflicts with existing data
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+    ServiceUnavailable:
+      description: Required AI provider is not configured or is unavailable
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
   schemas:
-    HealthResponse:
+    Error:
       type: object
-      required:
-        - status
+      required: [detail]
       properties:
-        status:
-          type: string
-          const: ok
+        detail: { type: string }
+    ValidationError:
+      type: object
+      properties:
+        detail: { type: array, items: { type: object } }
+    AuthResponse:
+      type: object
+      required: [access_token, token_type, user]
+      properties:
+        access_token: { type: string }
+        token_type: { type: string, const: bearer }
+        user: { $ref: '#/components/schemas/User' }
+    RegisterRequest:
+      type: object
+      required: [name, email, password, consent_status]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 320 }
+        password: { type: string, minLength: 12, maxLength: 128, writeOnly: true }
+        timezone: { type: string, default: UTC }
+        consent_status: { type: string, const: accepted }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, writeOnly: true }
+    User:
+      type: object
+      required: [user_id, name, email, role, timezone, consent_status, created_at, updated_at]
+      properties:
+        user_id: { type: integer }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [learner, admin] }
+        timezone: { type: string }
+        consent_status: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    UserUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 320 }
+        timezone: { type: string, maxLength: 100 }
+    Tag:
+      type: object
+      required: [tag_id, name]
+      properties:
+        tag_id: { type: integer }
+        name: { type: string }
+    ProblemPublic:
+      type: object
+      required: [problem_id, title, difficulty, statement, constraints, sample_input, sample_output, is_published, tags, created_at, updated_at]
+      properties:
+        problem_id: { type: integer }
+        title: { type: string }
+        difficulty: { type: string }
+        statement: { type: string }
+        constraints: { type: [string, 'null'] }
+        sample_input: { type: [string, 'null'] }
+        sample_output: { type: [string, 'null'] }
+        is_published: { type: boolean }
+        tags: { type: array, items: { $ref: '#/components/schemas/Tag' } }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ProblemAdmin:
+      allOf:
+        - $ref: '#/components/schemas/ProblemPublic'
+        - type: object
+          required: [editorial_notes, reference_solution]
+          properties:
+            editorial_notes: { type: [string, 'null'] }
+            reference_solution: { type: [string, 'null'] }
+    ProblemWrite:
+      type: object
+      required: [title, difficulty, statement]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 255 }
+        difficulty: { type: string, minLength: 1, maxLength: 100 }
+        statement: { type: string, minLength: 1 }
+        constraints: { type: [string, 'null'] }
+        sample_input: { type: [string, 'null'] }
+        sample_output: { type: [string, 'null'] }
+        editorial_notes: { type: [string, 'null'] }
+        reference_solution: { type: [string, 'null'] }
+        tags: { type: array, uniqueItems: true, items: { type: string, minLength: 1, maxLength: 255 } }
+    ProblemPatch:
+      type: object
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 1, maxLength: 255 }
+        difficulty: { type: string, minLength: 1, maxLength: 100 }
+        statement: { type: string, minLength: 1 }
+        constraints: { type: [string, 'null'] }
+        sample_input: { type: [string, 'null'] }
+        sample_output: { type: [string, 'null'] }
+        editorial_notes: { type: [string, 'null'] }
+        reference_solution: { type: [string, 'null'] }
+        tags: { type: array, uniqueItems: true, items: { type: string, minLength: 1, maxLength: 255 } }
+    ProblemPage:
+      type: object
+      required: [items, total, offset, limit]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/ProblemPublic' } }
+        total: { type: integer }
+        offset: { type: integer }
+        limit: { type: integer }
+    AdminProblemPage:
+      type: object
+      required: [items, total, offset, limit]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/ProblemAdmin' } }
+        total: { type: integer }
+        offset: { type: integer }
+        limit: { type: integer }
+    AttemptCreate:
+      type: object
+      required: [problem_id, outcome]
+      properties:
+        problem_id: { type: integer, minimum: 1 }
+        outcome: { type: string, enum: [attempted, solved] }
+        language: { type: string, maxLength: 100, default: self_reported }
+    Attempt:
+      type: object
+      required: [attempt_id, user_id, problem_id, language, verdict, attempted_at]
+      properties:
+        attempt_id: { type: integer }
+        user_id: { type: integer }
+        problem_id: { type: integer }
+        language: { type: string }
+        verdict: { type: string }
+        attempted_at: { type: string, format: date-time }
+        execution_time: { type: [number, 'null'] }
+        memory_used: { type: [integer, 'null'] }
+    AttemptPage:
+      type: object
+      required: [items, total, offset, limit]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Attempt' } }
+        total: { type: integer }
+        offset: { type: integer }
+        limit: { type: integer }
+    ProblemStatus:
+      type: object
+      required: [problem_id, status, updated_at]
+      properties:
+        problem_id: { type: integer }
+        status: { type: string, enum: [not_started, attempted, solved] }
+        first_attempt_at: { type: [string, 'null'], format: date-time }
+        solved_at: { type: [string, 'null'], format: date-time }
+        updated_at: { type: string, format: date-time }
+    ProblemStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [not_started, attempted, solved] }
+    PracticePlanUpdate:
+      type: object
+      required: [daily_goal]
+      properties:
+        daily_goal: { type: integer, minimum: 1, maximum: 1000 }
+    PracticePlan:
+      type: object
+      required: [plan_id, plan_date, daily_goal, completed_count]
+      properties:
+        plan_id: { type: integer }
+        plan_date: { type: string, format: date }
+        daily_goal: { type: integer }
+        completed_count: { type: integer }
+    DailyActivity:
+      type: object
+      required: [local_date, problems_attempted, problems_solved]
+      properties:
+        local_date: { type: string, format: date }
+        problems_attempted: { type: integer }
+        problems_solved: { type: integer }
+    StreakSummary:
+      type: object
+      required: [current_streak, longest_streak, timezone]
+      properties:
+        current_streak: { type: integer }
+        longest_streak: { type: integer }
+        timezone: { type: string }
+    ProgressSummary:
+      type: object
+      required: [total_solved, current_streak, longest_streak, daily_goal, completed_today, by_topic, by_difficulty]
+      properties:
+        total_solved: { type: integer }
+        current_streak: { type: integer }
+        longest_streak: { type: integer }
+        daily_goal: { type: integer }
+        completed_today: { type: integer }
+        by_topic:
+          type: array
+          items:
+            type: object
+            required: [name, solved]
+            properties:
+              name: { type: string }
+              solved: { type: integer }
+        by_difficulty:
+          type: array
+          items:
+            type: object
+            required: [name, solved]
+            properties:
+              name: { type: string }
+              solved: { type: integer }
+    Recommendation:
+      type: object
+      required: [problem, message]
+      properties:
+        problem: { oneOf: [{ $ref: '#/components/schemas/ProblemPublic' }, { type: 'null' }] }
+        message: { type: string }
+    HintRequest:
+      type: object
+      required: [level]
+      properties:
+        level: { type: integer, minimum: 1, maximum: 3 }
+        question: { type: [string, 'null'], maxLength: 1000 }
+    HintResponse:
+      type: object
+      required: [problem_id, level, hint, generated_by_ai, disclaimer]
+      properties:
+        problem_id: { type: integer }
+        level: { type: integer }
+        hint: { type: string }
+        generated_by_ai: { type: boolean, const: true }
+        disclaimer: { type: string }
