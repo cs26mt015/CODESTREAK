@@ -22,9 +22,12 @@ services:
     pull_policy: build
     restart: unless-stopped
     environment:
-      APP_NAME: ${APP_NAME:-ASDL API}
+      APP_NAME: ${APP_NAME:-CodeStreak API}
       APP_ENV: ${APP_ENV:-development}
       DATABASE_URL: mysql+pymysql://${MYSQL_USER:-asdl}:${MYSQL_PASSWORD:-asdl}@db:3306/${MYSQL_DATABASE:-asdl}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-development-signing-key-change-before-deploy}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      HINT_PROVIDER: ${HINT_PROVIDER:-disabled}
     depends_on:
       db:
         condition: service_healthy
