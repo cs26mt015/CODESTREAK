@@ -1,36 +1,45 @@
 services:
   db:
-    image: mysql:8.0
+    image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-codestreak}
-      MYSQL_USER: ${MYSQL_USER:-codestreak_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-codestreak_dev_password}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-codestreak_root_dev_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-asdl}
+      MYSQL_USER: ${MYSQL_USER:-asdl}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-asdl}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-asdl-root}
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root --password=\"$${MYSQL_ROOT_PASSWORD}\""]
-      interval: 10s
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 30s
+      retries: 20
+      start_period: 15s
 
-  app:
+  backend:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./backend
+    pull_policy: build
     restart: unless-stopped
     environment:
+      APP_NAME: ${APP_NAME:-ASDL API}
       APP_ENV: ${APP_ENV:-development}
-      APP_PORT: 8000
-      DATABASE_URL: "mysql+pymysql://${MYSQL_USER:-codestreak_user}:${MYSQL_PASSWORD:-codestreak_dev_password}@db:3306/${MYSQL_DATABASE:-codestreak}"
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-    ports:
-      - "127.0.0.1::8000"
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-asdl}:${MYSQL_PASSWORD:-asdl}@db:3306/${MYSQL_DATABASE:-asdl}
     depends_on:
       db:
         condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    pull_policy: build
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
 
 volumes:
-  mysql_data:
+  mysql-data:
