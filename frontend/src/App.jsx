@@ -1,22 +1,34 @@
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+import { useState } from 'react'
+import SignIn from './pages/SignIn'
+import { getSession, signOut } from './services/api'
 
-function App() {
+export default function App() {
+  const [session, setSession] = useState(getSession)
+
+  function handleSignOut() {
+    signOut()
+    setSession(null)
+  }
+
+  if (!session) {
+    return <SignIn onSignedIn={setSession} />
+  }
+
   return (
-    <main className="page">
-      <section className="welcome-card" aria-labelledby="page-title">
-        <p className="eyebrow">ASDL · Application</p>
-        <h1 id="page-title">Frontend is ready</h1>
-        <p className="description">
-          The React application is set up and ready for the project interface.
-        </p>
-        <div className="connection">
-          <span className="connection-dot" aria-hidden="true" />
-          <span>API base URL</span>
-          <code>{apiBaseUrl}</code>
-        </div>
+    <main className="signed-in-page">
+      <section className="signed-in-card" aria-labelledby="signed-in-title">
+        <a className="brand" href="/" aria-label="CodeStreak home">
+          <span className="brand-mark" aria-hidden="true">{'{ }'}</span>
+          <span>code<span className="brand-accent">streak</span></span>
+        </a>
+        <div className="signed-in-check" aria-hidden="true">✓</div>
+        <p className="eyebrow">SIGNED IN</p>
+        <h1 id="signed-in-title">Welcome, {session.user.name}.</h1>
+        <p className="signed-in-copy">You’re signed in to CodeStreak as {session.user.email}.</p>
+        <button className="button button-secondary sign-out-button" onClick={handleSignOut}>
+          Sign out
+        </button>
       </section>
     </main>
   )
 }
-
-export default App
