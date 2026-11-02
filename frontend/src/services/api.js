@@ -53,20 +53,36 @@ export async function apiRequest(path, options = {}) {
   return response.status === 204 ? null : response.json()
 }
 
-export async function signIn(email, password) {
-  const result = await apiRequest('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  })
-
+function saveSession(result) {
   if (!result?.access_token || !result?.user?.user_id) {
-    throw new Error('The sign-in response was incomplete. Please try again.')
+    throw new Error('The authentication response was incomplete. Please try again.')
   }
-
   const session = {
     accessToken: result.access_token,
     user: result.user,
   }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
   return session
+}
+
+export async function signIn(email, password) {
+  const result = await apiRequest('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  })
+  return saveSession(result)
+}
+
+export async function createAccount({ name, email, password, timezone }) {
+  const result = await apiRequest('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      name,
+      email,
+      password,
+      timezone,
+      consent_status: 'accepted',
+    }),
+  })
+  return saveSession(result)
 }

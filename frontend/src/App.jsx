@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import Register from './pages/Register'
 import SignIn from './pages/SignIn'
 import { getSession, signOut } from './services/api'
 
 export default function App() {
   const [session, setSession] = useState(getSession)
+  const [authPage, setAuthPage] = useState('sign-in')
 
   function handleSignOut() {
     signOut()
@@ -11,7 +13,10 @@ export default function App() {
   }
 
   if (!session) {
-    return <SignIn onSignedIn={setSession} />
+    if (authPage === 'register') {
+      return <Register onRegistered={setSession} onSignInRequested={() => setAuthPage('sign-in')} />
+    }
+    return <SignIn onSignedIn={setSession} onRegisterRequested={() => setAuthPage('register')} />
   }
 
   return (

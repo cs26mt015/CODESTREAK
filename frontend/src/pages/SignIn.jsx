@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { signIn } from '../services/api'
 
-export default function SignIn({ onSignedIn }) {
+export default function SignIn({ onSignedIn, onRegisterRequested }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -109,6 +109,10 @@ export default function SignIn({ onSignedIn }) {
             </form>
 
             <p className="auth-note">Your account is protected with secure sign-in.</p>
+            <p className="auth-switch">
+              New to CodeStreak?{' '}
+              <button type="button" onClick={onRegisterRequested}>Create an account</button>
+            </p>
           </div>
           <p className="form-side-footer">© 2026 CodeStreak</p>
         </div>
