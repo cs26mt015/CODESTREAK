@@ -69,6 +69,7 @@ export default function ProblemDetail({ problemId }) {
                 <i aria-hidden="true" />{problem.difficulty}
               </span>
             </div>
+            <a className="open-editor-link" href={`/problems/${problem.problem_id}/solve`}>Open code editor <span aria-hidden="true">→</span></a>
 
             <div className="detail-layout">
               <div className="detail-content">
