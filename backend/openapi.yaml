@@ -16,6 +16,7 @@ tags:
   - name: progress
   - name: recommendations
   - name: hints
+  - name: code execution
   - name: administration
 paths:
   /health:
@@ -149,6 +150,69 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ProblemPublic' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /languages:
+    get:
+      operationId: listJudgeLanguages
+      tags: [code execution]
+      summary: List Judge0 languages supported by the server
+      responses:
+        '200':
+          description: Available language identifiers and names
+          content:
+            application/json:
+              schema: { type: array, items: { type: object, additionalProperties: true } }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /problems/{problem_id}/run:
+    post:
+      operationId: runProblemCode
+      tags: [code execution]
+      summary: Run learner code with custom input
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CodeExecutionRequest' }
+      responses:
+        '200':
+          description: Judge0 execution result
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /problems/{problem_id}/submit:
+    post:
+      operationId: submitProblemCode
+      tags: [code execution]
+      summary: Judge code against private test cases and record the attempt
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProblemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CodeExecutionRequest' }
+      responses:
+        '200':
+          description: Submission verdict and passed test count
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CodeSubmissionResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Problem has no hidden test cases configured
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /tags:
     get:
       operationId: listTags
@@ -531,7 +595,7 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ValidationError' }
     ServiceUnavailable:
-      description: Required AI provider is not configured or is unavailable
+      description: Required external service is unavailable
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
@@ -611,10 +675,17 @@ components:
       allOf:
         - $ref: '#/components/schemas/ProblemPublic'
         - type: object
-          required: [editorial_notes, reference_solution]
+          required: [editorial_notes, reference_solution, hidden_test_cases]
           properties:
             editorial_notes: { type: [string, 'null'] }
             reference_solution: { type: [string, 'null'] }
+            hidden_test_cases: { type: array, maxItems: 20, items: { $ref: '#/components/schemas/HiddenTestCase' } }
+    HiddenTestCase:
+      type: object
+      required: [input, output]
+      properties:
+        input: { type: string, maxLength: 64000 }
+        output: { type: string, maxLength: 64000 }
     ProblemWrite:
       type: object
       required: [title, difficulty, statement]
@@ -627,6 +698,7 @@ components:
         sample_output: { type: [string, 'null'] }
         editorial_notes: { type: [string, 'null'] }
         reference_solution: { type: [string, 'null'] }
+        hidden_test_cases: { type: array, maxItems: 20, items: { $ref: '#/components/schemas/HiddenTestCase' } }
         tags: { type: array, uniqueItems: true, items: { type: string, minLength: 1, maxLength: 255 } }
     ProblemPatch:
       type: object
@@ -640,7 +712,27 @@ components:
         sample_output: { type: [string, 'null'] }
         editorial_notes: { type: [string, 'null'] }
         reference_solution: { type: [string, 'null'] }
+        hidden_test_cases: { type: array, maxItems: 20, items: { $ref: '#/components/schemas/HiddenTestCase' } }
         tags: { type: array, uniqueItems: true, items: { type: string, minLength: 1, maxLength: 255 } }
+    CodeExecutionRequest:
+      type: object
+      required: [language_id, source_code]
+      additionalProperties: false
+      properties:
+        language_id: { type: integer, minimum: 1 }
+        source_code: { type: string, minLength: 1, maxLength: 64000 }
+        stdin: { type: string, maxLength: 64000, default: '' }
+    CodeSubmissionResult:
+      type: object
+      required: [verdict, passed, total, failed_case, time, memory, attempt_id]
+      properties:
+        verdict: { type: string }
+        passed: { type: integer }
+        total: { type: integer }
+        failed_case: { type: [integer, 'null'] }
+        time: { type: number }
+        memory: { type: [integer, 'null'] }
+        attempt_id: { type: integer }
     ProblemPage:
       type: object
       required: [items, total, offset, limit]
