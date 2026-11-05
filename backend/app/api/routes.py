@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.auth import router as auth_router
 from app.api.hints import router as hints_router
+from app.api.judge import router as judge_router
 from app.api.problems import admin_router, router as problems_router
 from app.api.practice import router as practice_router
 from app.api.progress import recommendation_router, router as progress_router
@@ -13,6 +14,7 @@ api_router.include_router(practice_router)
 api_router.include_router(progress_router)
 api_router.include_router(recommendation_router)
 api_router.include_router(hints_router)
+api_router.include_router(judge_router)
 api_router.include_router(admin_router)
 
 

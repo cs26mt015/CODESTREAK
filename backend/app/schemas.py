@@ -95,9 +95,15 @@ class ProblemPublic(BaseModel):
     updated_at: datetime
 
 
+class HiddenTestCase(InputModel):
+    input: str = Field(max_length=64000)
+    output: str = Field(max_length=64000)
+
+
 class ProblemAdmin(ProblemPublic):
     editorial_notes: str | None
     reference_solution: str | None
+    hidden_test_cases: list[HiddenTestCase]
 
 
 class ProblemWrite(InputModel):
@@ -109,6 +115,7 @@ class ProblemWrite(InputModel):
     sample_output: str | None = Field(default=None, max_length=30000)
     editorial_notes: str | None = Field(default=None, max_length=30000)
     reference_solution: str | None = Field(default=None, max_length=50000)
+    hidden_test_cases: list[HiddenTestCase] = Field(default_factory=list, max_length=20)
     tags: list[str] = Field(default_factory=list, max_length=50)
 
     @field_validator("title", "difficulty")
@@ -137,6 +144,7 @@ class ProblemPatch(InputModel):
     sample_output: str | None = Field(default=None, max_length=30000)
     editorial_notes: str | None = Field(default=None, max_length=30000)
     reference_solution: str | None = Field(default=None, max_length=50000)
+    hidden_test_cases: list[HiddenTestCase] | None = Field(default=None, max_length=20)
     tags: list[str] | None = Field(default=None, max_length=50)
 
     @field_validator("title", "difficulty")
@@ -156,6 +164,8 @@ class ProblemPatch(InputModel):
         for required_field in ("title", "difficulty", "statement"):
             if required_field in self.model_fields_set and getattr(self, required_field) is None:
                 raise ValueError(f"{required_field} cannot be null")
+        if "hidden_test_cases" in self.model_fields_set and self.hidden_test_cases is None:
+            raise ValueError("hidden_test_cases cannot be null")
         return self
 
     @field_validator("tags")

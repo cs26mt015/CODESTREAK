@@ -14,7 +14,7 @@ Compose builds the frontend and backend images from their Dockerfiles as part of
 
 Open the frontend at `http://localhost:8080`. FastAPI is also available at `http://localhost:8000`; its Swagger UI is at `http://localhost:8000/docs` and ReDoc at `http://localhost:8000/redoc`. The frontend proxies API requests through the same origin.
 
-Stop the services with `docker compose down`. MySQL data remains in the `mysql-data` Docker volume. To remove the database and all its data, run `docker compose down --volumes`.
+Stop the services with `docker compose down`. MySQL and Judge0 data remain in their Docker volumes. To remove both databases and all saved data, run `docker compose down --volumes`.
 
 Compose waits for MySQL to become healthy before starting the backend. The backend applies Alembic migrations at startup, so the schema is created automatically. The database connection is supplied inside the Docker network; no local Python, Node.js, or MySQL installation is needed.
 
@@ -42,4 +42,14 @@ The full contract is in [backend/openapi.yaml](backend/openapi.yaml); FastAPI al
 
 Published problems and tags are public. Registration creates learner accounts; learner progress and attempts are private to the signed-in owner. Problem administration requires an account with the `admin` role. To promote a trusted account in a local development database, run `docker compose exec db mysql -u root -p asdl -e "UPDATE users SET role = 'admin' WHERE email = 'your-email@example.com';"` and enter the root password from `.env`.
 
-Practice attempts are learner-reported; the service does not execute submitted code. The hint endpoint is documented and rate-limited, but returns `503` until an AI provider integration is configured. It does not send the request text to an external service while disabled.
+The hint endpoint is documented and rate-limited, but returns `503` until an AI provider integration is configured. It does not send the request text to an external service while disabled.
+
+## Code execution with Judge0
+
+The Compose stack runs the official [Judge0 Community Edition](https://github.com/judge0/judge0) `1.13.1` image as a separate service, with its own PostgreSQL and Redis containers. Judge0 is licensed under [GPL-3.0](https://github.com/judge0/judge0/blob/master/LICENSE). The Judge0 API is private to the Compose network. FastAPI proxies the supported language list and learner run/submit requests; the frontend never receives the Judge0 authentication token. Judge0 executes untrusted programs in its Isolate sandbox. Execution networking is disabled and CPU, wall time, memory, and queue limits are configured in Compose.
+
+Use `docker compose up` to start the full stack. The first start downloads Judge0 and its database/cache images and can take several minutes. Language metadata is available through `/api/v1/languages`. Learners need a bearer token from the sign-in endpoint to run or submit code. `Run` uses custom input and returns stdout/compiler/runtime output; `Submit` checks the problem's private test cases, records the attempt, and marks the problem solved only after all cases pass. Administrators add or update `hidden_test_cases` through the admin problem API; each item has `input` and `output`. These values appear only in administrator responses and are not included in published problem details.
+
+For local development, Compose supplies fixed Judge0 credentials. Set `JUDGE0_AUTH_TOKEN`, `JUDGE0_POSTGRES_PASSWORD`, and `JUDGE0_REDIS_PASSWORD` in `.env` before deployment. Keep those values private. Judge0 requires privileged containers and its upstream project documents Linux as its supported host; use a Linux Docker Engine for reliable sandboxing. Docker Desktop on Windows or macOS may not provide the kernel features Judge0's Isolate sandbox requires.
+
+The Judge0 source clone is not needed to build or run this project. The upstream versioned container image is used directly; the local `judge0/` clone is ignored by Git and may be deleted after reviewing it.

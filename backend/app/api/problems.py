@@ -95,6 +95,7 @@ def list_admin_problems(
 @admin_router.post("", response_model=ProblemAdmin, status_code=status.HTTP_201_CREATED)
 def create_problem(payload: ProblemWrite, db: Database, _admin: AdminUser) -> Problem:
     values = payload.model_dump(exclude={"tags"})
+    values["hidden_test_cases"] = [case.model_dump() for case in payload.hidden_test_cases]
     problem = Problem(**values, is_published=False)
     set_problem_tags(db, problem, payload.tags)
     db.add(problem)
@@ -113,6 +114,8 @@ def update_problem(
 ) -> Problem:
     problem = get_admin_problem(db, problem_id)
     changes = payload.model_dump(exclude_unset=True)
+    if "hidden_test_cases" in changes and changes["hidden_test_cases"] is not None:
+        changes["hidden_test_cases"] = [case.model_dump() for case in payload.hidden_test_cases or []]
     if "tags" in changes:
         set_problem_tags(db, problem, changes.pop("tags") or [])
     for field, value in changes.items():
