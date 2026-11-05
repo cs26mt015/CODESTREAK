@@ -31,6 +31,13 @@ services:
       JUDGE0_API_URL: http://judge0-server:2358
       JUDGE0_AUTH_TOKEN: ${JUDGE0_AUTH_TOKEN:-local-judge0-token-change-me}
       JUDGE0_TIMEOUT_SECONDS: ${JUDGE0_TIMEOUT_SECONDS:-30}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      SEED_LEARNER_NAME: ${SEED_LEARNER_NAME:-Demo Learner}
+      SEED_LEARNER_EMAIL: ${SEED_LEARNER_EMAIL:-learner@example.com}
+      SEED_LEARNER_PASSWORD: ${SEED_LEARNER_PASSWORD:-LearnCode!2026Demo}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Demo Admin}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-AdminCode!2026Demo}
     depends_on:
       db:
         condition: service_healthy
