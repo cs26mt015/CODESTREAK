@@ -71,7 +71,11 @@ def make_problem(db_session):
             sample_output="1",
             editorial_notes="Use a direct approach.",
             reference_solution="int main() {}",
-            hidden_test_cases=hidden_test_cases or [{"input": "1", "output": "1"}],
+            hidden_test_cases=(
+                hidden_test_cases
+                if hidden_test_cases is not None
+                else [{"input": "1", "output": "1"}]
+            ),
             is_published=published,
         )
         for tag_name in tags or []:

@@ -1,9 +1,17 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.ai_interaction_metadata import AIInteractionMetadata
+    from app.models.daily_activity import DailyActivity
+    from app.models.practice_attempt import PracticeAttempt
+    from app.models.practice_plan import PracticePlan
+    from app.models.user_problem_status import UserProblemStatus
 
 
 class User(Base):

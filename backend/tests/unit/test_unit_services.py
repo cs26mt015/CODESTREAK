@@ -8,7 +8,6 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.models.daily_activity import DailyActivity
 from app.models.problem import Problem
 from app.models.tag import Tag
-from app.models.user import User
 from app.models.user_problem_status import UserProblemStatus
 from app.schemas import ProblemPatch, ProblemWrite, UserUpdate
 from app.services.activity import (

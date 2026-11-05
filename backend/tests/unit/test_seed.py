@@ -4,9 +4,8 @@ from types import SimpleNamespace
 import pytest
 
 from app.models import Problem, User
-from app.seed import _ensure_problem, _ensure_user, seed_demo_data
+from app.seed import STARTER_PROBLEMS, _ensure_problem, _ensure_user, seed_demo_data
 from app.seed_catalog import ADDITIONAL_PROBLEMS
-from app.seed import STARTER_PROBLEMS
 
 
 def test_catalog_contains_at_least_fifty_unique_complete_problems():

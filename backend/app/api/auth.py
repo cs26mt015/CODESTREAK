@@ -14,7 +14,13 @@ from app.models.practice_attempt import PracticeAttempt
 from app.models.practice_plan import PracticePlan
 from app.models.user import User
 from app.models.user_problem_status import UserProblemStatus
-from app.schemas import AuthResponse, LoginRequest, RegisterRequest, UserRead, UserUpdate
+from app.schemas import (
+    AuthResponse,
+    LoginRequest,
+    RegisterRequest,
+    UserRead,
+    UserUpdate,
+)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 CurrentUser = Annotated[User, Depends(current_user)]

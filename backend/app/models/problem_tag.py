@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Index, Integer
+from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
