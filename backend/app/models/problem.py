@@ -1,9 +1,16 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Integer, JSON, String, Text, func
+from sqlalchemy import JSON, Boolean, DateTime, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.ai_interaction_metadata import AIInteractionMetadata
+    from app.models.practice_attempt import PracticeAttempt
+    from app.models.tag import Tag
+    from app.models.user_problem_status import UserProblemStatus
 
 
 class Problem(Base):

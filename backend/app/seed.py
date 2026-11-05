@@ -10,7 +10,6 @@ from app.db.session import SessionLocal
 from app.models import Problem, Tag, User
 from app.seed_catalog import ADDITIONAL_PROBLEMS
 
-
 STARTER_PROBLEMS = (
     {
         "title": "Sum Two Integers",

@@ -1,11 +1,14 @@
-from typing import Annotated
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import selectinload
 
-from app.api.common import get_admin_problem, get_published_problem, problem_statement, set_problem_tags
+from app.api.common import (
+    get_admin_problem,
+    get_published_problem,
+    problem_statement,
+    set_problem_tags,
+)
 from app.api.dependencies import Database, admin_user, optional_current_user
 from app.models.ai_interaction_metadata import AIInteractionMetadata
 from app.models.practice_attempt import PracticeAttempt

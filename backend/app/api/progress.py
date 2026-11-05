@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import case, func, select
 
 from app.api.common import problem_statement
@@ -15,8 +15,8 @@ from app.models.user import User
 from app.models.user_problem_status import UserProblemStatus
 from app.schemas import (
     DailyActivityRead,
-    ProgressSummary,
     ProblemPublic,
+    ProgressSummary,
     Recommendation,
     StreakSummary,
 )
