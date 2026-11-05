@@ -18,9 +18,18 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.add_column(
         "problems",
-        sa.Column("hidden_test_cases", sa.JSON(), nullable=False, server_default="[]"),
+        sa.Column("hidden_test_cases", sa.JSON(), nullable=True),
     )
-    op.alter_column("problems", "hidden_test_cases", server_default=None)
+    op.execute(
+        "UPDATE problems SET hidden_test_cases = JSON_ARRAY() "
+        "WHERE hidden_test_cases IS NULL"
+    )
+    op.alter_column(
+        "problems",
+        "hidden_test_cases",
+        existing_type=sa.JSON(),
+        nullable=False,
+    )
 
 
 def downgrade() -> None:
