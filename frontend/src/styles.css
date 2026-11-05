@@ -3,6 +3,7 @@
 :root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #252840;
+  background: #f6f7fb;
   font-family: Manrope, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #20243a;
   background: #f5f6fb;
@@ -10,6 +11,10 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --ink: #272a41;
+  --muted: #888b9d;
+  --line: #e9eaf1;
+  --violet: #7769df;
   --ink: #252840;
   --muted: #85899d;
   --border: #e8e9f0;
@@ -28,6 +33,8 @@
 * { box-sizing: border-box; }
 body { min-width: 320px; min-height: 100vh; margin: 0; }
 button, input { font: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid #b9b1ff; outline-offset: 2px; }
+a { color: inherit; }
 a { color: inherit; }
 button:focus-visible, a:focus-visible { outline: 3px solid #b5adff; outline-offset: 3px; }
 

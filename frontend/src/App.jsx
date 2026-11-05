@@ -1,3 +1,7 @@
+import ProgressDashboard from './pages/ProgressDashboard'
+
+export default function App() {
+  return <ProgressDashboard />
 import ProblemDetail from './pages/ProblemDetail'
 import CodeEditor from './pages/CodeEditor'
 
