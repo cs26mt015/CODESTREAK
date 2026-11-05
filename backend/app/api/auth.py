@@ -5,7 +5,6 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 from app.api.dependencies import Database, current_user
 from app.core.security import create_access_token, hash_password, verify_password
@@ -98,7 +97,7 @@ def update_me(payload: UserUpdate, user: CurrentUser, db: Database) -> User:
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
-def delete_me(user: CurrentUser, db: Session) -> Response:
+def delete_me(user: CurrentUser, db: Database) -> Response:
     for model in (
         AIInteractionMetadata,
         UserProblemStatus,

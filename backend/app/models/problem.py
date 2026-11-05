@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, Integer, JSON, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -18,6 +18,7 @@ class Problem(Base):
     sample_output: Mapped[str | None] = mapped_column(Text, nullable=True)
     editorial_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     reference_solution: Mapped[str | None] = mapped_column(Text, nullable=True)
+    hidden_test_cases: Mapped[list[dict[str, str]]] = mapped_column(JSON, nullable=False, default=list)
     is_published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

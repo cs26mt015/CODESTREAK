@@ -28,11 +28,83 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-development-signing-key-change-before-deploy}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
       HINT_PROVIDER: ${HINT_PROVIDER:-disabled}
+      JUDGE0_API_URL: http://judge0-server:2358
+      JUDGE0_AUTH_TOKEN: ${JUDGE0_AUTH_TOKEN:-local-judge0-token-change-me}
+      JUDGE0_TIMEOUT_SECONDS: ${JUDGE0_TIMEOUT_SECONDS:-30}
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "8000:8000"
+
+  judge0-server:
+    image: judge0/judge0:1.13.1
+    restart: unless-stopped
+    privileged: true
+    environment: &judge0-environment
+      REDIS_HOST: judge0-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${JUDGE0_REDIS_PASSWORD:-local-judge0-redis-password}
+      POSTGRES_HOST: judge0-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: ${JUDGE0_POSTGRES_PASSWORD:-local-judge0-postgres-password}
+      AUTHN_HEADER: X-Auth-Token
+      AUTHN_TOKEN: ${JUDGE0_AUTH_TOKEN:-local-judge0-token-change-me}
+      ENABLE_NETWORK: "false"
+      ENABLE_WAIT_RESULT: "true"
+      JUDGE0_TELEMETRY_ENABLE: "false"
+      COUNT: "2"
+      CPU_TIME_LIMIT: "2"
+      MAX_CPU_TIME_LIMIT: "5"
+      WALL_TIME_LIMIT: "5"
+      MAX_WALL_TIME_LIMIT: "10"
+      MEMORY_LIMIT: "128000"
+      MAX_MEMORY_LIMIT: "256000"
+      MAX_QUEUE_SIZE: "50"
+    depends_on:
+      judge0-db:
+        condition: service_healthy
+      judge0-redis:
+        condition: service_healthy
+
+  judge0-worker:
+    image: judge0/judge0:1.13.1
+    command: ["./scripts/workers"]
+    restart: unless-stopped
+    privileged: true
+    environment: *judge0-environment
+    depends_on:
+      judge0-server:
+        condition: service_started
+
+  judge0-db:
+    image: postgres:16.2
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: ${JUDGE0_POSTGRES_PASSWORD:-local-judge0-postgres-password}
+    volumes:
+      - judge0-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U judge0 -d judge0"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  judge0-redis:
+    image: redis:7.2.4
+    restart: unless-stopped
+    command: ["sh", "-c", "exec redis-server --appendonly no --requirepass \"$$REDIS_PASSWORD\""]
+    environment:
+      REDIS_PASSWORD: ${JUDGE0_REDIS_PASSWORD:-local-judge0-redis-password}
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   frontend:
     build:
@@ -46,3 +118,4 @@ services:
 
 volumes:
   mysql-data:
+  judge0-postgres-data:
