@@ -31,16 +31,20 @@ jobs:
         working-directory: backend
         run: python -m pip install -r requirements-dev.txt
 
+      - name: Lint backend
+        working-directory: backend
+        run: ruff check app tests
+
       - name: Run unit and integration tests with coverage gate
         working-directory: backend
         run: >-
           python -m pytest tests/unit tests/integration
+          --cov-config=.coveragerc
           --cov=app.api
           --cov=app.services.activity
           --cov=app.core.security
           --cov=app.schemas
           --cov=app.seed
-          --cov-omit=app/api/routes.py,app/seed_catalog.py
           --cov-report=term-missing
           --cov-report=xml:coverage.xml
           --cov-fail-under=60
@@ -72,6 +76,9 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
+
+      - name: Lint frontend
+        run: npx --yes --package eslint@9 eslint --config eslint.config.js src
 
       - name: Build frontend
         run: npm run build

@@ -1,0 +1,4 @@
+[run]
+omit =
+    */app/api/routes.py
+    */app/seed_catalog.py

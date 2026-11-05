@@ -45,10 +45,11 @@ Backend unit tests cover service, schema, security, and seed behavior; integrati
 ```sh
 cd backend
 python -m pip install -r requirements-dev.txt
-python -m pytest tests/unit tests/integration --cov=app.api --cov=app.services.activity --cov=app.core.security --cov=app.schemas --cov=app.seed --cov-omit=app/api/routes.py,app/seed_catalog.py --cov-report=term-missing --cov-fail-under=80
+ruff check app tests
+python -m pytest tests/unit tests/integration --cov-config=.coveragerc --cov=app.api --cov=app.services.activity --cov=app.core.security --cov=app.schemas --cov=app.seed --cov-report=term-missing --cov-fail-under=60
 ```
 
-GitHub Actions runs the backend coverage gate, frontend production build, and Docker Compose application image build on every branch push and pull request.
+GitHub Actions runs Ruff on the backend, ESLint on the frontend, the backend coverage gate, the frontend production build, and Docker Compose application image builds on every branch push and pull request.
 
 ## API and access
 
