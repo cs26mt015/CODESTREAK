@@ -1,9 +1,20 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
-const SESSION_KEY = 'codestreak-session'
+export const SESSION_KEY = 'codestreak-session'
 
 function readSession() {
   try {
-    return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null')
+    const sharedSession = localStorage.getItem(SESSION_KEY)
+    if (sharedSession) return JSON.parse(sharedSession)
+
+    // Migrate sessions created before authentication was shared between tabs.
+    const previousSession = sessionStorage.getItem(SESSION_KEY)
+    if (!previousSession) return null
+    const session = JSON.parse(previousSession)
+    if (session?.accessToken && session?.user?.user_id) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+      sessionStorage.removeItem(SESSION_KEY)
+    }
+    return session
   } catch {
     return null
   }
@@ -16,6 +27,7 @@ export function getSession() {
 }
 
 export function signOut() {
+  localStorage.removeItem(SESSION_KEY)
   sessionStorage.removeItem(SESSION_KEY)
 }
 
@@ -62,7 +74,8 @@ function saveSession(result) {
     accessToken: result.access_token,
     user: result.user,
   }
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  sessionStorage.removeItem(SESSION_KEY)
   return session
 }
 

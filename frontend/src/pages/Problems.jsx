@@ -240,6 +240,14 @@ function ProblemCard({ problem }) {
           {tags.map(item => <span className="topic-chip" key={item.tag_id}>{item.name}</span>)}
         </div>
       </div>
+      <button
+        className="problem-open-button"
+        type="button"
+        onClick={() => window.location.assign(`/problems/${problem.problem_id}`)}
+        aria-label={`View problem ${problem.title}`}
+      >
+        View problem <span aria-hidden="true">→</span>
+      </button>
     </article>
   )
 }

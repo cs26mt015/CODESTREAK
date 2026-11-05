@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   backend-tests:
-    name: Backend tests (60% coverage minimum)
+    name: Backend tests (80% coverage minimum)
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -47,7 +47,7 @@ jobs:
           --cov=app.seed
           --cov-report=term-missing
           --cov-report=xml:coverage.xml
-          --cov-fail-under=60
+          --cov-fail-under=80
 
       - name: Upload coverage report
         if: always()
