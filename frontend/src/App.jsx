@@ -1,3 +1,7 @@
+import Problems from './pages/Problems'
+
+export default function App() {
+  return <Problems />
 import { useState } from 'react'
 import Register from './pages/Register'
 import SignIn from './pages/SignIn'
