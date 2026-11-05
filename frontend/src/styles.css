@@ -45,6 +45,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #b5adff; outline-offs
 .detail-brand-mark { display: grid; width: 33px; height: 33px; place-items: center; border: 1px solid #e7e3ff; border-radius: 9px; background: #f2f0ff; color: #7666dc; font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -0.12em; }
 .header-divider { width: 1px; height: 19px; background: #e8e8ef; }
 .header-section { color: #7c8092; font-size: 11px; font-weight: 600; }
+.detail-library-link { margin-left: auto; color: #6c5bc8; font-size: 11px; font-weight: 650; text-decoration: none; }
+.detail-library-link:hover { color: #493ca0; text-decoration: underline; }
 
 .detail-main { width: min(100% - 48px, 1120px); margin: 0 auto; padding: 30px 0 54px; }
 .detail-breadcrumb { display: flex; align-items: center; gap: 9px; margin-bottom: 21px; color: #9a9dac; font-size: 10px; }
@@ -122,6 +124,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid #b5adff; outline-offs
   .detail-section { padding: 16px 14px; }
   .detail-error { min-height: 350px; padding: 24px 12px; }
   .detail-error h1 { font-size: 20px; }
+}
 button, input, select { font: inherit; }
 a { color: inherit; }
 button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid #b5adff; outline-offset: 3px; }
@@ -236,6 +239,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   .problem-heading-line h2 { width: 100%; font-size: 13px; }
   .problem-description { margin-top: 7px; }
   .results-bar { font-size: 9px; }
+}
 button, input { font: inherit; }
 button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #aaa0ff; outline-offset: 3px; }
 
