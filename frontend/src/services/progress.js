@@ -1,13 +1,9 @@
+import { getSession } from './api'
+
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
-const SESSION_KEY = 'codestreak-session'
 
 export function readSession() {
-  try {
-    const session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null')
-    return session?.accessToken ? session : null
-  } catch {
-    return null
-  }
+  return getSession()
 }
 
 async function request(path, options = {}) {

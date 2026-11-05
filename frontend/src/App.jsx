@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AdminStudio from './pages/AdminStudio'
 import CodeEditor from './pages/CodeEditor'
 import ProblemDetail from './pages/ProblemDetail'
@@ -6,7 +6,7 @@ import Problems from './pages/Problems'
 import ProgressDashboard from './pages/ProgressDashboard'
 import Register from './pages/Register'
 import SignIn from './pages/SignIn'
-import { getSession, signOut } from './services/api'
+import { getSession, SESSION_KEY, signOut } from './services/api'
 
 function getRoute() {
   const path = window.location.pathname.replace(/\/$/, '') || '/'
@@ -28,6 +28,14 @@ export default function App() {
   const [authPage, setAuthPage] = useState(window.location.pathname === '/register' ? 'register' : 'sign-in')
   const route = getRoute()
   const isAdmin = session?.user?.role === 'admin'
+
+  useEffect(() => {
+    function syncSession(event) {
+      if (event.key === SESSION_KEY) setSession(getSession())
+    }
+    window.addEventListener('storage', syncSession)
+    return () => window.removeEventListener('storage', syncSession)
+  }, [])
 
   function switchAuthPage(page) {
     setAuthPage(page)

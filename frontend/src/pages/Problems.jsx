@@ -222,6 +222,7 @@ function ProblemCard({ problem }) {
   const tags = Array.isArray(problem.tags) ? problem.tags : []
 
   return (
+    <a className="problem-card-link" href={`/problems/${problem.problem_id}`} aria-label={`Open problem ${problem.title}`}>
     <article className="problem-card">
       <div className={`problem-number difficulty-tone-${level}`} aria-hidden="true">
         {String(problem.problem_id).padStart(2, '0')}
@@ -241,5 +242,6 @@ function ProblemCard({ problem }) {
         </div>
       </div>
     </article>
+    </a>
   )
 }
