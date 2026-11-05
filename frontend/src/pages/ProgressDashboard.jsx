@@ -10,7 +10,7 @@ import {
 } from '../services/progress'
 import './ProgressDashboard.css'
 
-export default function ProgressDashboard() {
+export default function ProgressDashboard({ onSignOut }) {
   const [session, setSession] = useState(readSession)
   const [summary, setSummary] = useState(null)
   const [activity, setActivity] = useState([])
@@ -102,10 +102,12 @@ export default function ProgressDashboard() {
         <nav className="progress-nav" aria-label="Main navigation">
           <a className="active" href="/">Overview</a>
           <a href="/problems">Problems</a>
+          {session.user?.role === 'admin' && <a href="/admin/problems">Admin studio</a>}
         </nav>
         <div className="progress-user">
           <span className="user-avatar" aria-hidden="true">{initials(session.user?.name)}</span>
           <span className="progress-user-name">{session.user?.name || 'Learner'}</span>
+          {onSignOut && <button className="progress-sign-out" type="button" onClick={onSignOut}>Sign out</button>}
         </div>
       </header>
 

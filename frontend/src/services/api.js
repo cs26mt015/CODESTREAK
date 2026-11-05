@@ -32,7 +32,8 @@ export async function apiRequest(path, options = {}) {
       ...options,
       headers,
     })
-  } catch {
+  } catch (error) {
+    if (error.name === 'AbortError') throw error
     throw new Error('Unable to reach CodeStreak. Check your connection and try again.')
   }
 

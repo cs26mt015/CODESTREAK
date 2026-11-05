@@ -40,6 +40,7 @@ export default function ProblemDetail({ problemId }) {
         </a>
         <span className="header-divider" aria-hidden="true" />
         <span className="header-section">Problem detail</span>
+        <a className="detail-library-link" href="/problems">Back to library</a>
       </header>
 
       <main className="detail-main">
